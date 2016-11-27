@@ -3,12 +3,36 @@ function Event (type, ...args) {
   this.args = args
 }
 
+function AccuracyTracker () {
+  this.goodStrokes = 0;
+  this.totalStrokes = 0;
+}
+
+AccuracyTracker.prototype.update = function (good) {
+  if (good) { this.goodStrokes++; }
+  this.totalStrokes++;
+}
+
+AccuracyTracker.prototype.report = function () {
+  return Math.round(100 * this.goodStrokes / this.totalStrokes);
+}
+
 function State (text) {
   this.cursor = 0;
   this.input = "";
   this.isComplete = false;
   this.text = text;
+  this.timer = {
+    running: false
+  };
+  this.accuracyTracker = new AccuracyTracker();
 }
+
+State.prototype.wpm = function () {
+  const elapsedMinutes = this.timer.elapsed / 60000;
+  const standardWords = this.text.length / 5;
+  return Math.round(standardWords / elapsedMinutes);
+};
 
 State.prototype.hasErrors = function () {
   return !this.text.startsWith(this.input);
@@ -32,14 +56,19 @@ State.prototype.processKeydown = function (key) {
   var eventQueue = [];
   if (key.length === 1 && !this.isAtEnd()) {
     this.input += key;
+    this.accuracyTracker.update(key === this.text[this.cursor]);
     this.cursor++;
   } else if (key === "Enter" && !this.isAtEnd()) {
     this.input += "\n";
+    this.accuracyTracker.update("\n" === this.text[this.cursor]);
     this.cursor++;
     this.nextLine();
   } else if (key === "Backspace" && !this.isAtStart()) {
     this.input = this.input.slice(0, -1);
     this.cursor--;
+  }
+  if (!this.timer.running && !this.isAtStart()) {
+    eventQueue.push(new Event("startTimer"));
   }
   if (this.isAtEnd()) {
     eventQueue.push(new Event("end"));
@@ -47,9 +76,17 @@ State.prototype.processKeydown = function (key) {
   return eventQueue;
 };
 
+State.prototype.processStartTimer = function () {
+  this.timer.running = true;
+  this.timer.start = Date.now();
+  return [];
+}
+
 State.prototype.processEnd = function () {
   if (this.input === this.text) {
     this.isComplete = true;
+    this.timer.running = false;
+    this.timer.elapsed = Date.now() - this.timer.start;
   }
   return [];
 };
@@ -58,6 +95,8 @@ State.prototype.process = function (event) {
   var eventQueue = [];
   if (event.type === "keydown" && !this.isComplete) {
     eventQueue = eventQueue.concat(this.processKeydown(...event.args));
+  } else if (event.type === "startTimer") {
+    eventQueue = eventQueue.concat(this.processStartTimer());
   } else if (event.type === "end") {
     eventQueue = eventQueue.concat(this.processEnd());
   }
@@ -113,9 +152,12 @@ function renderPaper (state) {
   }
 }
 
+
 function renderResults (state) {
-  results = document.getElementById("results");
-  results.textContent = "Complete!"
+  var results = document.getElementById("results");
+  const accuracy = state.accuracyTracker.report();
+  const wpm = state.wpm();
+  results.textContent = `Accuracy: ${accuracy}%\n   Speed: ${wpm}wpm`;
 }
 
 function render (state) {
@@ -146,11 +188,4 @@ function App (initialState) {
   render(this.state);
 }
 
-var app = new App(new State(String.raw`function errorFlash () {
-  var paper = document.getElementById("paper");
-  paper.className = "error";
-  window.setTimeout(
-    () => { paper.className = ""; },
-    200
-  );
-}`));
+var app = new App(new State(String.raw`The quick brown fox jumps over the lazy dog.`));
