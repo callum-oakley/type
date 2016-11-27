@@ -18,6 +18,10 @@ AccuracyTracker.prototype.report = function () {
 }
 
 function State (text) {
+  this.resetOrInitialise(text)
+}
+
+State.prototype.resetOrInitialise = function (text) {
   this.cursor = 0;
   this.input = "";
   this.isComplete = false;
@@ -91,6 +95,15 @@ State.prototype.processEnd = function () {
   return [];
 };
 
+State.prototype.processNavigation = function (key) {
+  eventQueue = [];
+  if (key === "r") {
+    this.resetOrInitialise(this.text);
+    eventQueue.push(new Event());
+  }
+  return eventQueue;
+}
+
 State.prototype.process = function (event) {
   var eventQueue = [];
   if (event.type === "keydown" && !this.isComplete) {
@@ -99,6 +112,8 @@ State.prototype.process = function (event) {
     eventQueue = eventQueue.concat(this.processStartTimer());
   } else if (event.type === "end") {
     eventQueue = eventQueue.concat(this.processEnd());
+  } else if (event.type === "keydown") {
+    eventQueue = eventQueue.concat(this.processNavigation(...event.args));
   }
   render(this);
   eventQueue.forEach(e => { this.process(e); });
@@ -155,29 +170,28 @@ function renderPaper (state) {
 
 function renderResults (state) {
   var results = document.getElementById("results");
+  results.textContent = "";
+  if (!state.isComplete) { return; }
   const accuracy = state.accuracyTracker.report();
   const wpm = state.wpm();
-  results.textContent = `Accuracy: ${accuracy}%\n   Speed: ${wpm}wpm`;
+  results.textContent = `Accuracy: ${accuracy}%\n   Speed: ${wpm}wpm\n\n[hit r to retry, or n for a new quote]`;
 }
 
-function render (state) {
-  if (state.isComplete) {
-    renderResults(state);
-  } else {
-    renderPaper(state);
-    if (state.isAtEnd() && state.hasErrors()) {
-      errorFlash();
-    }
-  }
-}
-
-function errorFlash () {
+function renderErrorFlash () {
   var paper = document.getElementById("paper");
   paper.className = "error";
   window.setTimeout(
     () => { paper.className = ""; },
     200
   );
+}
+
+function render (state) {
+  renderPaper(state);
+  renderResults(state);
+  if (state.isAtEnd() && state.hasErrors()) {
+    renderErrorFlash();
+  }
 }
 
 function App (initialState) {
