@@ -62,7 +62,7 @@ State.prototype.process = function (event) {
     eventQueue = eventQueue.concat(this.processEnd());
   }
   render(this);
-  eventQueue.forEach(e => { console.log(this); this.process(e); });
+  eventQueue.forEach(e => { this.process(e); });
 };
 
 Element.prototype.addCharacterElement = function (content, className) {
@@ -146,4 +146,11 @@ function App (initialState) {
   render(this.state);
 }
 
-var app = new App(new State(String.raw`hello`));
+var app = new App(new State(String.raw`function errorFlash () {
+  var paper = document.getElementById("paper");
+  paper.className = "error";
+  window.setTimeout(
+    () => { paper.className = ""; },
+    200
+  );
+}`));
