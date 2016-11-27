@@ -56,7 +56,7 @@ State.prototype.nextLine = function () {
   }
 };
 
-State.prototype.processKeydown = function (key) {
+State.prototype.processInput = function (key) {
   var eventQueue = [];
   if (key.length === 1 && !this.isAtEnd()) {
     this.input += key;
@@ -95,7 +95,7 @@ State.prototype.processEnd = function () {
   return [];
 };
 
-State.prototype.processNavigation = function (key) {
+State.prototype.processCommand = function (key) {
   eventQueue = [];
   if (key === "r") {
     this.resetOrInitialise(this.text);
@@ -106,14 +106,14 @@ State.prototype.processNavigation = function (key) {
 
 State.prototype.process = function (event) {
   var eventQueue = [];
-  if (event.type === "keydown" && !this.isComplete) {
-    eventQueue = eventQueue.concat(this.processKeydown(...event.args));
+  if (event.type === "input") {
+    eventQueue = eventQueue.concat(this.processInput(...event.args));
   } else if (event.type === "startTimer") {
     eventQueue = eventQueue.concat(this.processStartTimer());
   } else if (event.type === "end") {
     eventQueue = eventQueue.concat(this.processEnd());
-  } else if (event.type === "keydown") {
-    eventQueue = eventQueue.concat(this.processNavigation(...event.args));
+  } else if (event.type === "command") {
+    eventQueue = eventQueue.concat(this.processCommand(...event.args));
   }
   render(this);
   eventQueue.forEach(e => { this.process(e); });
@@ -174,7 +174,7 @@ function renderResults (state) {
   if (!state.isComplete) { return; }
   const accuracy = state.accuracyTracker.report();
   const wpm = state.wpm();
-  results.textContent = `Accuracy: ${accuracy}%\n   Speed: ${wpm}wpm\n\n[hit r to retry, or n for a new quote]`;
+  results.textContent = `Accuracy: ${accuracy}%\n   Speed: ${wpm}wpm\n\n[hit r to retry, or n for a new text]`;
 }
 
 function renderErrorFlash () {
@@ -196,10 +196,27 @@ function render (state) {
 
 function App (initialState) {
   document.addEventListener("keydown", event => {
-    this.state.process(new Event("keydown", event.key));
+    if (this.state.isComplete) {
+      this.state.process(new Event("command", event.key));
+    } else {
+      this.state.process(new Event("input", event.key));
+    }
   });
   this.state = initialState;
   render(this.state);
 }
 
-var app = new App(new State(String.raw`The quick brown fox jumps over the lazy dog.`));
+var app = new App(new State(String.raw`State.prototype.process = function (event) {
+  var eventQueue = [];
+  if (event.type === "input") {
+    eventQueue = eventQueue.concat(this.processInput(...event.args));
+  } else if (event.type === "startTimer") {
+    eventQueue = eventQueue.concat(this.processStartTimer());
+  } else if (event.type === "end") {
+    eventQueue = eventQueue.concat(this.processEnd());
+  } else if (event.type === "command") {
+    eventQueue = eventQueue.concat(this.processCommand(...event.args));
+  }
+  render(this);
+  eventQueue.forEach(e => { this.process(e); });
+};`));
