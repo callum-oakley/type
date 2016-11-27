@@ -1,0 +1,43 @@
+body {
+  background: #f5f5f5;
+}
+
+#paper {
+  color: #bbb7b5;
+  font-family: Nitti;
+  line-height: 1.5;
+  margin: 100px auto;
+  white-space: pre-wrap;
+  width: 60ch;
+}
+
+#results {
+  color: #1dafe7;
+  font-family: Nitti;
+  line-height: 1.5;
+  margin: 100px auto;
+  white-space: pre-wrap;
+  width: 20ch;
+}
+
+.typed {
+  color: #141414;
+}
+
+#paper.error > span {
+  color: #e25018;
+}
+
+.cursor {
+  background: #1dafe7;
+  color: #f5f5f5;
+}
+
+.cursor-error {
+  background: #e25018;
+  color: #f5f5f5;
+}
+
+.error {
+  color: #e25018;
+}
