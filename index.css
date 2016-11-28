@@ -2,6 +2,10 @@ body {
   background: #f5f5f5;
 }
 
+.hidden {
+  display: none;
+}
+
 #paper {
   color: #bbb7b5;
   font-family: Nitti;
@@ -11,7 +15,19 @@ body {
   width: 60ch;
 }
 
-#results {
+#text-input {
+  color: #141414;
+  display: block;
+  font-family: Nitti;
+  height: 400px;
+  line-height: 1.5;
+  margin: 100px auto;
+  resize: none;
+  white-space: pre-wrap;
+  width: 600px;
+}
+
+#results, #instructions {
   color: #1dafe7;
   font-family: Nitti;
   line-height: 1.5;

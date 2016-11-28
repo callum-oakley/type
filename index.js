@@ -18,7 +18,7 @@ AccuracyTracker.prototype.report = function () {
 }
 
 function State (text) {
-  this.resetOrInitialise(text)
+  this.resetOrInitialise(text);
 }
 
 State.prototype.resetOrInitialise = function (text) {
@@ -100,8 +100,16 @@ State.prototype.processCommand = function (key) {
   if (key === "r") {
     this.resetOrInitialise(this.text);
     eventQueue.push(new Event());
+  } else if (key === "n") {
+    this.resetOrInitialise("");
+    eventQueue.push(new Event());
   }
   return eventQueue;
+}
+
+State.prototype.processSetText = function (text) {
+  this.resetOrInitialise(text);
+  return [];
 }
 
 State.prototype.process = function (event) {
@@ -114,6 +122,8 @@ State.prototype.process = function (event) {
     eventQueue = eventQueue.concat(this.processEnd());
   } else if (event.type === "command") {
     eventQueue = eventQueue.concat(this.processCommand(...event.args));
+  } else if (event.type === "setText") {
+    eventQueue = eventQueue.concat(this.processSetText(...event.args));
   }
   render(this);
   eventQueue.forEach(e => { this.process(e); });
@@ -121,8 +131,8 @@ State.prototype.process = function (event) {
 
 Element.prototype.addCharacterElement = function (content, className) {
   var element = document.createElement("span");
-  content && (element.textContent = content);
-  className && (element.className = className);
+  if (content) { element.textContent = content; }
+  if (className) { element.className = className; }
   this.appendChild(element);
 };
 
@@ -167,7 +177,6 @@ function renderPaper (state) {
   }
 }
 
-
 function renderResults (state) {
   var results = document.getElementById("results");
   results.textContent = "";
@@ -186,15 +195,31 @@ function renderErrorFlash () {
   );
 }
 
+function renderGetText () {
+  var textInput = document.getElementById("text-input");
+  textInput.value = "";
+  document.getElementById("instructions").textContent =
+    "[paste a text in to the box above]";
+  window.setTimeout(() => { textInput.focus(); }, 100 );
+}
+
 function render (state) {
-  renderPaper(state);
-  renderResults(state);
-  if (state.isAtEnd() && state.hasErrors()) {
-    renderErrorFlash();
+  if (state.text) {
+    document.getElementById("main").className = "";
+    document.getElementById("settings").className = "hidden";
+    renderPaper(state);
+    renderResults(state);
+    if (state.isAtEnd() && state.hasErrors()) {
+      renderErrorFlash();
+    }
+  } else {
+    document.getElementById("main").className = "hidden";
+    document.getElementById("settings").className = "";
+    renderGetText();
   }
 }
 
-function App (initialState) {
+function App () {
   document.addEventListener("keydown", event => {
     if (this.state.isComplete) {
       this.state.process(new Event("command", event.key));
@@ -202,21 +227,12 @@ function App (initialState) {
       this.state.process(new Event("input", event.key));
     }
   });
-  this.state = initialState;
+  var textInput = document.getElementById("text-input");
+  textInput.addEventListener("input", () => {
+    this.state.process(new Event("setText", textInput.value));
+  })
+  this.state = new State("");
   render(this.state);
 }
 
-var app = new App(new State(String.raw`State.prototype.process = function (event) {
-  var eventQueue = [];
-  if (event.type === "input") {
-    eventQueue = eventQueue.concat(this.processInput(...event.args));
-  } else if (event.type === "startTimer") {
-    eventQueue = eventQueue.concat(this.processStartTimer());
-  } else if (event.type === "end") {
-    eventQueue = eventQueue.concat(this.processEnd());
-  } else if (event.type === "command") {
-    eventQueue = eventQueue.concat(this.processCommand(...event.args));
-  }
-  render(this);
-  eventQueue.forEach(e => { this.process(e); });
-};`));
+var app = new App();
