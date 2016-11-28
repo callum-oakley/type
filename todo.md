@@ -1,0 +1,3 @@
+- refactor to use react (and redux?)
+- add an input sanitization step
+- add ability to alt-backspace words
