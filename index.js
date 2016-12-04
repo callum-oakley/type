@@ -2,6 +2,23 @@ function isAlphanumeric(c) {
   return "0" <= c && c <= "9" || "A" <= c && c <= "Z" || "a" <= c && c <= "z";
 }
 
+// Replace hard to type characters with keyboard friendly alternatives.
+function substitutions(c) {
+  // "‘" or "’" to "'"
+  if (c.charCodeAt(0) === 8216 || c.charCodeAt(0) === 8217) { return "'"; }
+  // "“" or "”" to '"'
+  if (c.charCodeAt(0) === 8220 || c.charCodeAt(0) === 8221) { return '"'; }
+  // "–" or "—" to "-"
+  if (c.charCodeAt(0) === 8211 || c.charCodeAt(0) === 8212) { return "-"; }
+  // "…" to "..."
+  if (c.charCodeAt(0) === 8230) { return "..."; }
+  return c;
+}
+
+function sanitize(text) {
+  return text.split("").map(substitutions).reduce((x, y) => x + y, "");
+}
+
 class Event {
   constructor(type, ...args) {
     this.type = type,
@@ -129,7 +146,7 @@ class State {
   }
 
   processSetText(text) {
-    this.resetOrInitialise(text);
+    this.resetOrInitialise(sanitize(text));
     return [];
   }
 
