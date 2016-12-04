@@ -1,3 +1,7 @@
+function isAlphanumeric(c) {
+  return "0" <= c && c <= "9" || "A" <= c && c <= "Z" || "a" <= c && c <= "z";
+}
+
 class Event {
   constructor(type, ...args) {
     this.type = type,
@@ -61,7 +65,18 @@ class State {
     }
   }
 
-  processInput(key) {
+  backspace() {
+    this.input = this.input.slice(0, -1);
+    this.cursor--;
+  }
+
+  altBackspace() {
+    do {
+      this.backspace();
+    } while (isAlphanumeric(this.input[this.cursor - 1]))
+  }
+
+  processInput(key, alt) {
     var eventQueue = [];
     if (key.length === 1 && !this.isAtEnd) {
       this.input += key;
@@ -72,9 +87,10 @@ class State {
       this.accuracyTracker.update("\n" === this.text[this.cursor]);
       this.cursor++;
       this.nextLine();
+    } else if (key === "Backspace" && alt && !this.isAtStart) {
+      this.altBackspace();
     } else if (key === "Backspace" && !this.isAtStart) {
-      this.input = this.input.slice(0, -1);
-      this.cursor--;
+      this.backspace();
     }
     if (!this.timer.running && !this.isAtStart) {
       eventQueue.push(new Event("startTimer"));
@@ -231,7 +247,7 @@ class App {
       if (this.state.isComplete) {
         this.state.process(new Event("command", event.key));
       } else {
-        this.state.process(new Event("input", event.key));
+        this.state.process(new Event("input", event.key, event.altKey));
       }
     });
     var textInput = document.getElementById("text-input");
