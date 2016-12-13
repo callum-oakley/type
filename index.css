@@ -18,7 +18,7 @@ body {
 #text-input {
   color: #141414;
   display: block;
-  font-family: Nitti;
+  font-family: Nitti, Monaco, monospace;
   height: 400px;
   line-height: 1.5;
   margin: 100px auto;
@@ -29,7 +29,7 @@ body {
 
 #results, #instructions {
   color: #1dafe7;
-  font-family: Nitti;
+  font-family: Nitti, Monaco, monospace;
   line-height: 1.5;
   margin: 100px auto;
   white-space: pre-wrap;
