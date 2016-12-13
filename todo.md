@@ -1,3 +1,2 @@
 - refactor to use react (and redux?)
-- add an input sanitization step
 - only display some fixed number of lines, no scroll

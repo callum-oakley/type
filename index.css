@@ -8,7 +8,7 @@ body {
 
 #paper {
   color: #bbb7b5;
-  font-family: Nitti;
+  font-family: Nitti, Monaco, monospace;
   line-height: 1.5;
   margin: 100px auto;
   white-space: pre-wrap;
