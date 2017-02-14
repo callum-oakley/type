@@ -87,15 +87,17 @@ class State {
     this.cursor--;
   }
 
-  altBackspace() {
+  wordBackspace() {
     do {
       this.backspace();
     } while (isAlphanumeric(this.input[this.cursor - 1]))
   }
 
-  processInput(key, alt) {
+  processInput(key, alt, ctrl) {
     var eventQueue = [];
-    if (key.length === 1 && !this.isAtEnd) {
+    if (key === "w" && ctrl) {
+      this.wordBackspace();
+    } else if (key.length === 1 && !this.isAtEnd) {
       this.input += key;
       this.accuracyTracker.update(key === this.text[this.cursor]);
       this.cursor++;
@@ -105,7 +107,7 @@ class State {
       this.cursor++;
       this.nextLine();
     } else if (key === "Backspace" && alt && !this.isAtStart) {
-      this.altBackspace();
+      this.wordBackspace();
     } else if (key === "Backspace" && !this.isAtStart) {
       this.backspace();
     }
@@ -264,7 +266,7 @@ class App {
       if (this.state.isComplete) {
         this.state.process(new Event("command", event.key));
       } else {
-        this.state.process(new Event("input", event.key, event.altKey));
+        this.state.process(new Event("input", event.key, event.altKey, event.ctrlKey));
       }
     });
     var textInput = document.getElementById("text-input");
