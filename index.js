@@ -266,7 +266,9 @@ class App {
       if (this.state.isComplete) {
         this.state.process(new Event("command", event.key));
       } else {
-        this.state.process(new Event("input", event.key, event.altKey, event.ctrlKey));
+        this.state.process(
+          new Event("input", event.key, event.altKey, event.ctrlKey)
+        );
       }
     });
     var textInput = document.getElementById("text-input");
